@@ -1,0 +1,265 @@
+{
+  "project": "sentrux",
+  "version": "0.5.7",
+  "license": "MIT",
+  "generated": "2026-05-04",
+  "repo": "github.com/sentrux/sentrux",
+  "description": "Rust desktop+CLI tool — scans codebase via tree-sitter, computes structural quality (5 root-cause metrics), live treemap GUI + MCP server for AI agents",
+  "stack": ["rust", "tree-sitter", "eframe", "egui", "wgpu"],
+  "stats": {
+    "source_files": 121,
+    "test_files": 20,
+    "total_loc": 33722
+  },
+  "workspace": {
+    "resolver": "2",
+    "members": ["sentrux-core", "sentrux-bin"],
+    "shared_dependencies": {
+      "eframe": "0.31",
+      "egui": "0.31"
+    },
+    "release_profile": {
+      "opt_level": 3,
+      "lto": "thin"
+    }
+  },
+  "crates": {
+    "sentrux-core": {
+      "path": "sentrux-core/",
+      "type": "lib",
+      "version": "0.5.7",
+      "role": "Analysis, metrics, renderer, GUI app, MCP server, license — all modules pub",
+      "dependencies": {
+        "tree-sitter": "0.25",
+        "git2": "0.20",
+        "ignore": "0.4",
+        "rayon": "1",
+        "dashmap": "6",
+        "notify": "7",
+        "notify-debouncer-mini": "0.5",
+        "libloading": "0.8",
+        "ed25519-dalek": "2",
+        "base64": "0.22",
+        "serde": "1",
+        "serde_json": "1",
+        "serde_yaml": "0.9",
+        "toml": "0.8",
+        "quick-xml": "0.37",
+        "thiserror": "2",
+        "crossbeam-channel": "0.5",
+        "rfd": "0.15",
+        "streaming-iterator": "0.1.9",
+        "dirs": "6"
+      },
+      "features": {
+        "default": [],
+        "pro": "Activated by sentrux-pro crate via sentrux-bin"
+      }
+    },
+    "sentrux-bin": {
+      "path": "sentrux-bin/",
+      "type": "bin+lib",
+      "version": "0.5.7",
+      "binary_name": "sentrux",
+      "lib_name": "sentrux_bin",
+      "role": "Clap CLI + eframe entry; run() re-exported for sentrux-pro",
+      "dependencies": {
+        "sentrux-core": "path",
+        "clap": "4",
+        "eframe": "workspace",
+        "egui": "workspace",
+        "dirs": "6"
+      },
+      "features": {
+        "default": [],
+        "pro": ["sentrux-core/pro"]
+      }
+    },
+    "sentrux-pro": {
+      "path": "external — github.com/sentrux/sentrux-pro",
+      "type": "cdylib",
+      "role": "Pro features loaded at runtime from ~/.sentrux/pro/pro.dylib",
+      "private": true,
+      "build_token": "PRO_REPO_TOKEN"
+    }
+  },
+  "entry_points": {
+    "binary": "sentrux-bin/src/main.rs",
+    "real_entry": "sentrux-bin/src/main_impl.rs",
+    "lib_entry": "sentrux-bin/src/lib.rs",
+    "core_lib": "sentrux-core/src/lib.rs",
+    "mcp_server": "sentrux-core/src/app/mcp_server/mod.rs"
+  },
+  "cli": {
+    "default": "sentrux [path] — launches GUI",
+    "subcommands": {
+      "check": "Run rules engine, exit non-zero on violations",
+      "gate": "Quality gate; --save writes baseline",
+      "scan": "One-shot scan, print snapshot",
+      "mcp": "Start stdio JSON-RPC MCP server (also --mcp alias)",
+      "plugin": ["list", "add-standard", "add", "remove", "init", "validate"],
+      "analytics": ["on", "off"],
+      "login": "Pro account auth",
+      "pro": ["activate <key>", "status", "deactivate", "update"]
+    }
+  },
+  "modules": {
+    "sentrux-core/src": {
+      "lib.rs": "pub re-exports — public surface for sentrux-pro",
+      "license.rs": "Tier enum (Free<Pro<Team), Ed25519 sig verification, init(), pro.dylib loader",
+      "pro_registry.rs": "Runtime registry for Pro-supplied color modes / MCP tools / panels",
+      "queries/": "Embedded tree-sitter tags.scm bundles",
+      "core/": {
+        "types.rs": "Snapshot, FileNode, ids — data model",
+        "path_utils.rs": "Path helpers",
+        "settings.rs": "User settings",
+        "heat.rs": "Heat overlay data"
+      },
+      "analysis/": {
+        "plugin/": "Per-language grammar loading via libloading",
+        "parser/": "Tree-sitter AST → import/call edges",
+        "graph/": "Dependency graph build",
+        "git.rs": "Git history walking",
+        "entry_points.rs": "Detect entry points",
+        "lang_registry.rs": "Language registry"
+      },
+      "metrics/": {
+        "arch/": "Architectural distance + graph metrics",
+        "dsm/": "Design Structure Matrix",
+        "evo/": "Evolutionary metrics from git history",
+        "rules/": "sentrux check rule engine",
+        "whatif/": "Pro: what-if simulation",
+        "testgap/": "Pro: test coverage gaps",
+        "stability.rs": "Stability metric",
+        "root_causes.rs": "5 root-cause aggregator",
+        "cross_validation.rs": "Cross-validation"
+      },
+      "layout/": "Treemap layout — rects, viewport, weight, treemap_layout, types",
+      "renderer/": "egui draw — rects, edges, edge_routing, heat_overlay, minimap, badges, colors",
+      "app/": {
+        "_files": ["mod.rs", "state.rs", "scanning.rs", "watcher.rs", "update_loop.rs", "update_check.rs", "canvas.rs", "toolbar.rs", "status_bar.rs", "settings_panel.rs", "breadcrumb.rs", "channels.rs", "scan_threads.rs", "prefs.rs", "progress.rs", "draw_panels.rs", "color_utils.rs"],
+        "panels/": ["activity_panel", "dsm_panel", "evolution_display", "file_detail", "health_display", "language_summary", "metrics_panel", "rules_display", "whatif_display", "ui_helpers"],
+        "mcp_server/": {
+          "mod.rs": "Server entry",
+          "registry.rs": "ToolDef registration; Pro tools register via pro_registry",
+          "handlers.rs": "Free-tier tool handlers",
+          "handlers_evo.rs": "Evolution metric tool handlers"
+        }
+      }
+    }
+  },
+  "tests": {
+    "strategy": "co-located, no separate tests/ dir",
+    "count": 20,
+    "locations": [
+      "sentrux-core/src/metrics/arch/tests.rs",
+      "sentrux-core/src/metrics/arch/tests2.rs",
+      "sentrux-core/src/metrics/dsm/tests.rs",
+      "sentrux-core/src/metrics/evo/tests.rs",
+      "sentrux-core/src/metrics/rules/tests.rs",
+      "sentrux-core/src/metrics/whatif/tests.rs",
+      "sentrux-core/src/metrics/testgap/tests.rs",
+      "sentrux-core/src/metrics/mod_tests.rs",
+      "sentrux-core/src/metrics/mod_tests2.rs",
+      "sentrux-core/src/analysis/graph/tests.rs",
+      "sentrux-core/src/analysis/graph/tests2.rs",
+      "sentrux-core/src/analysis/parser/tests.rs",
+      "sentrux-core/src/analysis/parser/tests2.rs",
+      "sentrux-core/src/analysis/parser/ast_import_test.rs",
+      "sentrux-core/src/layout/tests.rs",
+      "sentrux-core/src/layout/tests2.rs",
+      "sentrux-core/src/app/scanning_tests.rs"
+    ],
+    "helpers": [
+      "sentrux-core/src/metrics/test_helpers.rs",
+      "sentrux-core/src/analysis/test_helpers.rs",
+      "sentrux-core/src/layout/test_helpers.rs"
+    ]
+  },
+  "ci": {
+    "workflows": {
+      "build-grammars.yml": {
+        "trigger": "tag v*",
+        "purpose": "Build tree-sitter grammar bundles per platform",
+        "platforms": ["darwin-arm64", "linux-x86_64", "linux-aarch64", "windows-x86_64"]
+      },
+      "ci-release.yml": {
+        "trigger": "workflow_run after build-grammars",
+        "purpose": "cargo test + cargo build --release with current-tag grammars"
+      },
+      "ci.yml": {
+        "trigger": "push to main, PRs",
+        "purpose": "Falls back through last 5 release tags for grammars",
+        "windows_excluded": "tree-sitter-scss MSVC build issue"
+      },
+      "release.yml": {
+        "trigger": "tag v*",
+        "purpose": "Build binaries on macos-latest / ubuntu-22.04 / windows-latest; pulls private sentrux-pro"
+      }
+    },
+    "no_lint_gates": "cargo fmt and cargo clippy do NOT gate merges"
+  },
+  "docs": {
+    "authoritative": {
+      "docs/pro-architecture.md": "Pro tier spec — dylib loading, license, registration",
+      "docs/quality-signal-design.md": "5 root-cause metrics, cybernetics, formulas",
+      "docs/project-index.md": "Long-form structural index",
+      "CLAUDE.md": "Workspace layout, commands, invariants",
+      "README.md": "Overview, install, MCP, rules"
+    },
+    "translations": ["README.de.md", "README.ja.md", "README.zh-CN.md"],
+    "do_not_edit": ["docs/*.html (design exploration prototypes)"]
+  },
+  "runtime_data": {
+    "root": "~/.sentrux/",
+    "paths": {
+      "plugins/": "tree-sitter grammar bundles per-language",
+      "pro/pro.dylib": "Pro plugin (watermarked per user)",
+      "pro/manifest.json": "Pro plugin manifest",
+      "license.key": "Ed25519-signed JSON license",
+      "last_update_check": "update timestamp",
+      "telemetry_pending.json": "queued telemetry"
+    }
+  },
+  "build_deps_linux": [
+    "libgtk-3-dev",
+    "libxcb-render0-dev",
+    "libxcb-shape0-dev",
+    "libxcb-xfixes0-dev",
+    "libxkbcommon-dev",
+    "libssl-dev",
+    "libvulkan-dev"
+  ],
+  "build_deps_linux_arm64_extra": ["gcc-aarch64-linux-gnu", ":arm64 variants of base deps"],
+  "env_vars": {
+    "SENTRUX_DEBUG": "Enable debug_log!() output",
+    "SENTRUX_SKIP_GRAMMAR_DOWNLOAD": "Skip grammar fetch on startup",
+    "WGPU_BACKEND": "Override wgpu backend (e.g. gl if Vulkan flakes)"
+  },
+  "invariants": [
+    "Every sentrux-core module is pub — Pro crate consumes types directly",
+    "sentrux_bin::run() -> eframe::Result<()> signature is load-bearing for Pro wrapper",
+    "license::init() runs BEFORE any GUI/CLI work in run()",
+    "sync_embedded_plugins() runs AFTER ensure_grammars_installed() — embedded overrides tarball",
+    "Free-tier code never assumes pro.dylib is present — degrade silently via pro_registry",
+    "Never gate features with tier.is_pro() — use pro_registry lookup instead",
+    "LICENSE_PUBLIC_KEY in license.rs is paired with offline private key — changing invalidates all issued licenses"
+  ],
+  "do_not_touch": [
+    "target/",
+    "assets/*.gif",
+    "assets/logo-*.svg",
+    "docs/*.html",
+    "LICENSE_PUBLIC_KEY constant in sentrux-core/src/license.rs"
+  ],
+  "quick_commands": {
+    "build": "cargo build --release",
+    "test": "cargo test",
+    "test_core": "cargo test -p sentrux-core",
+    "test_filter": "cargo test -p sentrux-core metrics::",
+    "run_check": "cargo run -- check .",
+    "run_gate": "cargo run -- gate --save .",
+    "run_gui": "cargo run",
+    "debug": "SENTRUX_DEBUG=1 cargo run"
+  }
+}
