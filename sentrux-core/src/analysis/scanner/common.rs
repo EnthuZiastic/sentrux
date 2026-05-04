@@ -64,6 +64,7 @@ pub(crate) fn detect_lang(path: &Path) -> String {
 const GLOBAL_IGNORED_DIRS: &[&str] = &[
     ".git", ".DS_Store", ".claude", ".cognitive", ".beemem",
     "lib64", "include",
+    "graphify-out",   // generated knowledge graph output — not source code
 ];
 
 /// Merged ignored dirs: global + all plugins. Cached at first access.

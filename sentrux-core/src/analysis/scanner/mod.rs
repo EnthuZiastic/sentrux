@@ -125,6 +125,12 @@ fn collect_paths_git(root: &Path, file_size_limit: u64) -> Option<Vec<CollectedF
                 ignored_ext += 1;
                 return None;
             }
+            // Skip files whose path passes through an ignored dir (e.g. graphify-out/).
+            // git ls-files returns tracked files regardless of .gitignore, so we must
+            // filter ignored dir components here — the WalkBuilder filter_entry is not reached.
+            if rel.split('/').any(|c| should_ignore_dir(c)) {
+                return None;
+            }
             let meta = match fs::metadata(&abs) {
                 Ok(m) => m,
                 Err(_) => { meta_fail += 1; return None; }
